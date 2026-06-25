@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { CheckCircle, AlertTriangle, HelpCircle, Activity, Award, RefreshCw, Zap, Crown, Sparkles, Swords, Shield } from 'lucide-react';
+import { CheckCircle, RefreshCw, Crown, Sparkles } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
+const panel = "bg-white/[.04] backdrop-blur-md border border-zinc-800 rounded-lg p-5 relative overflow-hidden transition-all hover:border-zinc-600";
 
 export default function Coach({ proMode, sharedDeck, cards }) {
   const [presets, setPresets] = useState([]);
@@ -11,27 +12,18 @@ export default function Coach({ proMode, sharedDeck, cards }) {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
 
-  // Simulation States
   const [simRunning, setSimRunning] = useState(false);
   const [simOutcome, setSimOutcome] = useState(null);
   const [simUnits, setSimUnits] = useState([]);
   const [simPopups, setSimPopups] = useState([]);
   const [simLogs, setSimLogs] = useState([]);
-  const [simTowers, setSimTowers] = useState({
-    blueKing: 4000,
-    blueLeft: 2500,
-    blueRight: 2500,
-    redKing: 4000,
-    redLeft: 2500,
-    redRight: 2500
-  });
+  const [simTowers, setSimTowers] = useState({ blueKing: 4000, blueLeft: 2500, blueRight: 2500, redKing: 4000, redLeft: 2500, redRight: 2500 });
 
   const OPPONENT_DECKS = {
     golem: ["golem", "baby-dragon", "night-witch", "lumberjack", "tornado", "poison", "skeletons", "bomber"],
     pekka: ["pekka", "bandit", "battle-ram", "electro-wizard", "royal-ghost", "dark-prince", "poison", "zap"],
     hog: ["hog-rider", "musketeer", "knight", "skeletons", "ice-spirit", "cannon", "fireball", "the-log"]
   };
-
   const [selectedOpponentPreset, setSelectedOpponentPreset] = useState("pekka");
 
   const getUnitStats = (cardKey) => {
@@ -49,59 +41,23 @@ export default function Coach({ proMode, sharedDeck, cards }) {
 
   const startSimulation = () => {
     if (simRunning) return;
-    setSimRunning(true);
-    setSimOutcome(null);
+    setSimRunning(true); setSimOutcome(null);
     setSimLogs(["[System] Initializing Battle Arena Grid...", "[System] Decks verified. Loading troops..."]);
     setSimPopups([]);
-    setSimTowers({
-      blueKing: 4000,
-      blueLeft: 2500,
-      blueRight: 2500,
-      redKing: 4000,
-      redLeft: 2500,
-      redRight: 2500
-    });
-
+    setSimTowers({ blueKing: 4000, blueLeft: 2500, blueRight: 2500, redKing: 4000, redLeft: 2500, redRight: 2500 });
     const playerDeck = sharedDeck?.slice(0, 4) || ["hog-rider", "musketeer", "knight", "skeletons"];
     const opponentDeck = OPPONENT_DECKS[selectedOpponentPreset].slice(0, 4);
-
     const initialUnits = [];
     playerDeck.forEach((key, idx) => {
       const stats = getUnitStats(key);
       const lane = idx % 2 === 0 ? 'left' : 'right';
-      initialUnits.push({
-        id: `blue-${idx}-${Date.now()}`,
-        side: 'blue',
-        name: stats.name,
-        x: lane === 'left' ? 22 : 78,
-        y: 80 + idx * 3,
-        hp: stats.hp,
-        maxHp: stats.maxHp,
-        damage: stats.damage,
-        image: stats.image,
-        lane: lane,
-        status: 'walking'
-      });
+      initialUnits.push({ id: `blue-${idx}-${Date.now()}`, side: 'blue', name: stats.name, x: lane === 'left' ? 22 : 78, y: 80 + idx * 3, hp: stats.hp, maxHp: stats.maxHp, damage: stats.damage, image: stats.image, lane, status: 'walking' });
     });
-
     opponentDeck.forEach((key, idx) => {
       const stats = getUnitStats(key);
       const lane = idx % 2 === 0 ? 'left' : 'right';
-      initialUnits.push({
-        id: `red-${idx}-${Date.now()}`,
-        side: 'red',
-        name: stats.name,
-        x: lane === 'left' ? 22 : 78,
-        y: 20 - idx * 3,
-        hp: stats.hp,
-        maxHp: stats.maxHp,
-        damage: stats.damage,
-        image: stats.image,
-        lane: lane,
-        status: 'walking'
-      });
+      initialUnits.push({ id: `red-${idx}-${Date.now()}`, side: 'red', name: stats.name, x: lane === 'left' ? 22 : 78, y: 20 - idx * 3, hp: stats.hp, maxHp: stats.maxHp, damage: stats.damage, image: stats.image, lane, status: 'walking' });
     });
-
     setSimUnits(initialUnits);
     setSimLogs(prev => [...prev, "[Arena] Deployed units! Combat simulation running..."]);
   };
@@ -110,330 +66,151 @@ export default function Coach({ proMode, sharedDeck, cards }) {
     if (!simRunning) return;
     let tickCount = 0;
     const maxTicks = 45;
-
     const interval = setInterval(() => {
       tickCount++;
       setSimUnits(prevUnits => {
         const blueLeft = prevUnits.some(u => u.side === 'blue');
         const redLeft = prevUnits.some(u => u.side === 'red');
-
-        if (simTowers.redKing <= 0) {
-          setSimOutcome('victory');
-          setSimRunning(false);
-          setSimLogs(logs => [...logs, "[Victory] Red King Tower destroyed! VICTORY!"]);
-          clearInterval(interval);
-          return [];
-        }
-        if (simTowers.blueKing <= 0) {
-          setSimOutcome('defeat');
-          setSimRunning(false);
-          setSimLogs(logs => [...logs, "[Defeat] Blue King Tower destroyed! DEFEAT!"]);
-          clearInterval(interval);
-          return [];
-        }
-
+        if (simTowers.redKing <= 0) { setSimOutcome('victory'); setSimRunning(false); setSimLogs(logs => [...logs, "[Victory] Red King Tower destroyed! VICTORY!"]); clearInterval(interval); return []; }
+        if (simTowers.blueKing <= 0) { setSimOutcome('defeat'); setSimRunning(false); setSimLogs(logs => [...logs, "[Defeat] Blue King Tower destroyed! DEFEAT!"]); clearInterval(interval); return []; }
         if (tickCount >= maxTicks || (!blueLeft && !redLeft)) {
-          if (simTowers.redLeft < simTowers.blueLeft) {
-            setSimOutcome('victory');
-            setSimLogs(logs => [...logs, "[Arena] Match ended. Blue holds health advantage. Victory!"]);
-          } else {
-            setSimOutcome('defeat');
-            setSimLogs(logs => [...logs, "[Arena] Match ended. Red holds health advantage. Defeat!"]);
-          }
-          setSimRunning(false);
-          clearInterval(interval);
-          return [];
+          if (simTowers.redLeft < simTowers.blueLeft) { setSimOutcome('victory'); setSimLogs(logs => [...logs, "[Arena] Match ended. Blue holds health advantage. Victory!"]); }
+          else { setSimOutcome('defeat'); setSimLogs(logs => [...logs, "[Arena] Match ended. Red holds health advantage. Defeat!"]); }
+          setSimRunning(false); clearInterval(interval); return [];
         }
-
         const nextUnits = prevUnits.map(unit => {
           if (unit.hp <= 0) return null;
-
           const enemies = prevUnits.filter(e => e.side !== unit.side && e.hp > 0);
-          let target = null;
-          let minDist = 999;
-          enemies.forEach(enemy => {
-            const dist = Math.hypot(enemy.x - unit.x, enemy.y - unit.y);
-            if (dist < minDist) {
-              minDist = dist;
-              target = enemy;
-            }
-          });
-
-          if (target && minDist < 8) {
-            target.hp -= unit.damage;
-            setSimPopups(pops => [
-              ...pops,
-              { id: Math.random().toString(), x: target.x, y: target.y, text: `-${unit.damage}`, type: 'normal' }
-            ]);
-            setSimLogs(logs => [
-              ...logs,
-              `[Combat] ${unit.name} strikes ${target.name} for ${unit.damage}!`
-            ]);
-            return { ...unit, status: 'attacking' };
-          }
-
+          let target = null, minDist = 999;
+          enemies.forEach(enemy => { const dist = Math.hypot(enemy.x - unit.x, enemy.y - unit.y); if (dist < minDist) { minDist = dist; target = enemy; } });
+          if (target && minDist < 8) { target.hp -= unit.damage; setSimPopups(pops => [...pops, { id: Math.random().toString(), x: target.x, y: target.y, text: `-${unit.damage}`, type: 'normal' }]); setSimLogs(logs => [...logs, `[Combat] ${unit.name} strikes ${target.name} for ${unit.damage}!`]); return { ...unit, status: 'attacking' }; }
           let towerTarget = null;
-          if (unit.side === 'blue') {
-            const leftDist = Math.hypot(22 - unit.x, 20 - unit.y);
-            const rightDist = Math.hypot(78 - unit.x, 20 - unit.y);
-            const kingDist = Math.hypot(50 - unit.x, 10 - unit.y);
-            if (kingDist < 10) towerTarget = 'redKing';
-            else if (leftDist < 10) towerTarget = 'redLeft';
-            else if (rightDist < 10) towerTarget = 'redRight';
-          } else {
-            const leftDist = Math.hypot(22 - unit.x, 80 - unit.y);
-            const rightDist = Math.hypot(78 - unit.x, 80 - unit.y);
-            const kingDist = Math.hypot(50 - unit.x, 90 - unit.y);
-            if (kingDist < 10) towerTarget = 'blueKing';
-            else if (leftDist < 10) towerTarget = 'blueLeft';
-            else if (rightDist < 10) towerTarget = 'blueRight';
-          }
-
-          if (towerTarget && simTowers[towerTarget] > 0) {
-            setSimTowers(towers => {
-              const newTowers = { ...towers };
-              newTowers[towerTarget] = Math.max(0, newTowers[towerTarget] - unit.damage);
-              return newTowers;
-            });
-            setSimPopups(pops => [
-              ...pops,
-              {
-                id: Math.random().toString(),
-                x: unit.side === 'blue' ? (towerTarget === 'redLeft' ? 22 : towerTarget === 'redRight' ? 78 : 50) : (towerTarget === 'blueLeft' ? 22 : towerTarget === 'blueRight' ? 78 : 50),
-                y: unit.side === 'blue' ? (towerTarget === 'redKing' ? 10 : 20) : (towerTarget === 'blueKing' ? 90 : 80),
-                text: `-${unit.damage}`,
-                type: 'normal'
-              }
-            ]);
-            setSimLogs(logs => [...logs, `[Tower] ${unit.name} hits Opponent Tower for ${unit.damage}!`]);
-            return { ...unit, status: 'attacking' };
-          }
-
-          let nextX = unit.x;
-          let nextY = unit.y;
-          if (unit.side === 'blue') {
-            if (unit.y > 50) {
-              nextY -= 4;
-            } else {
-              if (unit.lane === 'left') nextX = nextX + (22 - nextX) * 0.2;
-              else nextX = nextX + (78 - nextX) * 0.2;
-              nextY -= 4;
-            }
-          } else {
-            if (unit.y < 50) {
-              nextY += 4;
-            } else {
-              if (unit.lane === 'left') nextX = nextX + (22 - nextX) * 0.2;
-              else nextX = nextX + (78 - nextX) * 0.2;
-              nextY += 4;
-            }
-          }
+          if (unit.side === 'blue') { const ld = Math.hypot(22 - unit.x, 20 - unit.y), rd = Math.hypot(78 - unit.x, 20 - unit.y), kd = Math.hypot(50 - unit.x, 10 - unit.y); if (kd < 10) towerTarget = 'redKing'; else if (ld < 10) towerTarget = 'redLeft'; else if (rd < 10) towerTarget = 'redRight'; }
+          else { const ld = Math.hypot(22 - unit.x, 80 - unit.y), rd = Math.hypot(78 - unit.x, 80 - unit.y), kd = Math.hypot(50 - unit.x, 90 - unit.y); if (kd < 10) towerTarget = 'blueKing'; else if (ld < 10) towerTarget = 'blueLeft'; else if (rd < 10) towerTarget = 'blueRight'; }
+          if (towerTarget && simTowers[towerTarget] > 0) { setSimTowers(towers => { const n = { ...towers }; n[towerTarget] = Math.max(0, n[towerTarget] - unit.damage); return n; }); setSimPopups(pops => [...pops, { id: Math.random().toString(), x: unit.side === 'blue' ? (towerTarget === 'redLeft' ? 22 : towerTarget === 'redRight' ? 78 : 50) : (towerTarget === 'blueLeft' ? 22 : towerTarget === 'blueRight' ? 78 : 50), y: unit.side === 'blue' ? (towerTarget === 'redKing' ? 10 : 20) : (towerTarget === 'blueKing' ? 90 : 80), text: `-${unit.damage}`, type: 'normal' }]); setSimLogs(logs => [...logs, `[Tower] ${unit.name} hits Opponent Tower for ${unit.damage}!`]); return { ...unit, status: 'attacking' }; }
+          let nextX = unit.x, nextY = unit.y;
+          if (unit.side === 'blue') { if (unit.y > 50) { nextY -= 4; } else { nextX = nextX + ((unit.lane === 'left' ? 22 : 78) - nextX) * 0.2; nextY -= 4; } }
+          else { if (unit.y < 50) { nextY += 4; } else { nextX = nextX + ((unit.lane === 'left' ? 22 : 78) - nextX) * 0.2; nextY += 4; } }
           return { ...unit, x: nextX, y: nextY, status: 'walking' };
         }).filter(Boolean);
-
         return nextUnits;
       });
-
-      setTimeout(() => {
-        setSimPopups(pops => pops.slice(1));
-      }, 500);
+      setTimeout(() => setSimPopups(pops => pops.slice(1)), 500);
     }, 550);
-
     return () => clearInterval(interval);
   }, [simRunning, simTowers]);
 
-  // Fetch presets on mount
   useEffect(() => {
-    fetch(`${API_BASE}/coach/presets`)
-      .then(res => res.json())
-      .then(data => {
-        setPresets(data);
-        if (data.length > 0) {
-          setSelectedPreset(data[0].key);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error fetching presets:", err);
-        setLoading(false);
-      });
+    fetch(`${API_BASE}/coach/presets`).then(res => res.json()).then(data => { setPresets(data); if (data.length > 0) setSelectedPreset(data[0].key); setLoading(false); }).catch(err => { console.error("Error fetching presets:", err); setLoading(false); });
   }, []);
 
-  // Run analysis when preset changes
   useEffect(() => {
     if (selectedPreset) {
       setAnalyzing(true);
-      fetch(`${API_BASE}/coach/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ presetKey: selectedPreset })
-      })
-        .then(res => res.json())
-        .then(data => {
-          setResults(data);
-          setAnalyzing(false);
-        })
-        .catch(err => {
-          console.error("Error analyzing replay:", err);
-          setAnalyzing(false);
-        });
+      fetch(`${API_BASE}/coach/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ presetKey: selectedPreset }) })
+        .then(res => res.json()).then(data => { setResults(data); setAnalyzing(false); }).catch(err => { console.error("Error analyzing replay:", err); setAnalyzing(false); });
     }
   }, [selectedPreset]);
 
-  // Format time (seconds to mm:ss)
-  const formatTime = (secs) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
+  const formatTime = (secs) => { const m = Math.floor(secs / 60), s = secs % 60; return `${m}:${s < 10 ? '0' : ''}${s}`; };
 
-  if (loading) {
-    return <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem' }}>Synchronizing coaching modules...</p>;
-  }
+  if (loading) return <p className="text-zinc-400 text-center py-16">Synchronizing coaching modules...</p>;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-      <div className="page-header">
-        <h1 className="page-title">Training Camp (AI Coach)</h1>
-        <p className="page-subtitle">Upload simulated match replay logs and get a frame-by-frame resource telemetry report, waste calculations, mistake tags, and personalized coaching drills.</p>
+    <div className="flex flex-col gap-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-[1.75rem] font-extrabold tracking-tight text-white mb-1"
+            style={{ fontFamily: 'var(--font-clash)', textShadow: '-1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 2px 3px 6px rgba(0,0,0,.85)' }}>
+          Training Camp (AI Coach)
+        </h1>
+        <p className="text-zinc-400 text-sm">Upload simulated match replay logs and get a frame-by-frame resource telemetry report, waste calculations, mistake tags, and personalized coaching drills.</p>
       </div>
 
-      {/* PRO MODE BATTLE SIMULATOR (Only visible under Pro Mode) */}
+      {/* Pro Mode Battle Simulator */}
       {proMode && (
-        <div className="cr-panel" style={{ borderColor: 'var(--cr-gold)' }}>
-          <div className="cr-panel-header" style={{ margin: '-1.5rem -1.5rem 1.5rem -1.5rem' }}>
-            <span className="cr-panel-title" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div className={panel} style={{ borderColor: 'var(--cr-gold)' }}>
+          <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-6">
+            <span className="font-extrabold text-base text-white flex items-center gap-2" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>
               🏟️ Interactive Arena Battle Simulator
             </span>
-            <span className="cr-league-badge cr-badge-ultimate">PRO SIMULATOR</span>
+            <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-sky-400 bg-sky-400/5 border-sky-400/20">PRO SIMULATOR</span>
           </div>
 
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-            Unleash your active battle deck against an AI preset opponent. Watch units deploy, cross the bridges, and engage in real-time tower combat.
-          </p>
+          <p className="text-[0.85rem] text-zinc-400 mb-5">Unleash your active battle deck against an AI preset opponent. Watch units deploy, cross the bridges, and engage in real-time tower combat.</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'start', marginBottom: '1rem' }}>
+          <div className="grid grid-cols-2 gap-6 items-start">
             {/* Arena board */}
-            <div>
-              <div className="battle-arena">
-                <div className="arena-grid"></div>
-                <div className="arena-river"></div>
-                <div className="arena-bridge left"></div>
-                <div className="arena-bridge right"></div>
+            <div className="relative w-full rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800" style={{ aspectRatio: '3/4' }}>
+              {/* Grid overlay */}
+              <div className="absolute inset-0 opacity-[.015]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)', backgroundSize: '20px 20px' }} />
+              {/* River */}
+              <div className="absolute left-0 right-0 bg-[#0c0f1d] border-t border-b border-dashed border-zinc-800" style={{ top: '46%', height: '8%' }} />
+              {/* Bridges */}
+              <div className="absolute w-[10%] bg-zinc-800 border border-zinc-700 rounded-sm" style={{ left: '17%', top: '44%', height: '12%' }} />
+              <div className="absolute w-[10%] bg-zinc-800 border border-zinc-700 rounded-sm" style={{ left: '73%', top: '44%', height: '12%' }} />
 
-                {/* Towers */}
-                {/* Red Towers (Opponent) */}
-                {simTowers.redKing > 0 && <div className="arena-tower red king" style={{ opacity: simTowers.redKing / 4000 }}>👑 {simTowers.redKing}</div>}
-                {simTowers.redLeft > 0 && <div className="arena-tower red princess-left" style={{ opacity: simTowers.redLeft / 2500 }}>🏹 {simTowers.redLeft}</div>}
-                {simTowers.redRight > 0 && <div className="arena-tower red princess-right" style={{ opacity: simTowers.redRight / 2500 }}>🏹 {simTowers.redRight}</div>}
+              {/* Towers */}
+              {simTowers.redKing > 0 && <div className="absolute text-[0.6rem] text-red-200 bg-red-900 border border-zinc-700 rounded px-1 py-0.5 text-center" style={{ top: '5%', left: '50%', transform: 'translateX(-50%)', opacity: simTowers.redKing / 4000 }}>👑 {simTowers.redKing}</div>}
+              {simTowers.redLeft > 0 && <div className="absolute text-[0.6rem] text-red-200 bg-red-900 border border-zinc-700 rounded px-1 py-0.5 text-center" style={{ top: '12%', left: '15%', opacity: simTowers.redLeft / 2500 }}>🏹 {simTowers.redLeft}</div>}
+              {simTowers.redRight > 0 && <div className="absolute text-[0.6rem] text-red-200 bg-red-900 border border-zinc-700 rounded px-1 py-0.5 text-center" style={{ top: '12%', right: '15%', opacity: simTowers.redRight / 2500 }}>🏹 {simTowers.redRight}</div>}
+              {simTowers.blueKing > 0 && <div className="absolute text-[0.6rem] text-blue-200 bg-blue-900 border border-zinc-700 rounded px-1 py-0.5 text-center" style={{ bottom: '5%', left: '50%', transform: 'translateX(-50%)', opacity: simTowers.blueKing / 4000 }}>👑 {simTowers.blueKing}</div>}
+              {simTowers.blueLeft > 0 && <div className="absolute text-[0.6rem] text-blue-200 bg-blue-900 border border-zinc-700 rounded px-1 py-0.5 text-center" style={{ bottom: '12%', left: '15%', opacity: simTowers.blueLeft / 2500 }}>🏹 {simTowers.blueLeft}</div>}
+              {simTowers.blueRight > 0 && <div className="absolute text-[0.6rem] text-blue-200 bg-blue-900 border border-zinc-700 rounded px-1 py-0.5 text-center" style={{ bottom: '12%', right: '15%', opacity: simTowers.blueRight / 2500 }}>🏹 {simTowers.blueRight}</div>}
 
-                {/* Blue Towers (Player) */}
-                {simTowers.blueKing > 0 && <div className="arena-tower blue king" style={{ opacity: simTowers.blueKing / 4000 }}>👑 {simTowers.blueKing}</div>}
-                {simTowers.blueLeft > 0 && <div className="arena-tower blue princess-left" style={{ opacity: simTowers.blueLeft / 2500 }}>🏹 {simTowers.blueLeft}</div>}
-                {simTowers.blueRight > 0 && <div className="arena-tower blue princess-right" style={{ opacity: simTowers.blueRight / 2500 }}>🏹 {simTowers.blueRight}</div>}
-
-                {/* Deployed Units */}
-                {simUnits.map(unit => (
-                  <div 
-                    key={unit.id}
-                    className={`arena-unit ${unit.side}`}
-                    style={{ 
-                      top: `${unit.y}%`, 
-                      left: `${unit.x}%`,
-                      backgroundImage: `url(${unit.image})`,
-                      transform: 'translate(-50%, -50%)'
-                    }}
-                    title={unit.name}
-                  >
-                    {/* Unit HP Bar */}
-                    <div className="unit-hp-bar">
-                      <div className="unit-hp-inner" style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }}></div>
-                    </div>
+              {/* Units */}
+              {simUnits.map(unit => (
+                <div key={unit.id} title={unit.name}
+                     className={`absolute w-8 h-8 rounded-full bg-cover bg-center border-[1.5px] shadow-md ${unit.side === 'blue' ? 'border-blue-400 shadow-blue-400/40' : 'border-red-400 shadow-red-400/40'}`}
+                     style={{ top: `${unit.y}%`, left: `${unit.x}%`, transform: 'translate(-50%,-50%)', backgroundImage: `url(${unit.image})` }}>
+                  <div className="absolute -bottom-1 left-0 right-0 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${unit.side === 'blue' ? 'bg-blue-400' : 'bg-red-400'}`} style={{ width: `${(unit.hp / unit.maxHp) * 100}%` }} />
                   </div>
-                ))}
+                </div>
+              ))}
 
-                {/* Damage Popups */}
-                {simPopups.map(pop => (
-                  <div 
-                    key={pop.id}
-                    className={`damage-popup ${pop.type}`}
-                    style={{ top: `${pop.y - 4}%`, left: `${pop.x}%`, transform: 'translate(-50%, -50%)' }}
-                  >
-                    {pop.text}
-                  </div>
-                ))}
+              {/* Damage popups */}
+              {simPopups.map(pop => (
+                <div key={pop.id} className="absolute text-[0.7rem] font-bold text-red-400 pointer-events-none" style={{ top: `${pop.y - 4}%`, left: `${pop.x}%`, transform: 'translate(-50%,-50%)' }}>{pop.text}</div>
+              ))}
 
-                {/* Simulation Overlays */}
-                {simOutcome && (
-                  <div 
-                    className="modal-overlay" 
-                    style={{ position: 'absolute', background: 'rgba(0,0,0,0.75)', animation: 'popIn 0.3s ease-out' }}
-                  >
-                    <div className="glass-panel" style={{ textAlign: 'center', borderColor: 'var(--cr-gold)', padding: '2rem' }}>
-                      <h2 style={{ 
-                        fontSize: '2rem', 
-                        color: simOutcome === 'victory' ? 'var(--cr-gold)' : 'var(--cr-red)',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {simOutcome === 'victory' ? '🏆 VICTORY 🏆' : '💀 DEFEAT 💀'}
-                      </h2>
-                      <p style={{ fontSize: '0.9rem', color: 'white', marginBottom: '1rem' }}>
-                        {simOutcome === 'victory' ? 'Opponent King Tower destroyed!' : 'Your King Tower has collapsed!'}
-                      </p>
-                      <button className="btn btn-secondary" onClick={() => setSimOutcome(null)}>Dismiss</button>
-                    </div>
+              {/* Outcome overlay */}
+              {simOutcome && (
+                <div className="absolute inset-0 bg-black/75 flex items-center justify-center anim-pop-in">
+                  <div className="text-center border rounded-lg p-8 bg-white/[.04] backdrop-blur-md" style={{ borderColor: 'var(--cr-gold)' }}>
+                    <h2 className="text-[2rem] mb-2" style={{ color: simOutcome === 'victory' ? 'var(--cr-gold)' : 'var(--cr-red)' }}>
+                      {simOutcome === 'victory' ? '🏆 VICTORY 🏆' : '💀 DEFEAT 💀'}
+                    </h2>
+                    <p className="text-[0.9rem] text-white mb-4">{simOutcome === 'victory' ? 'Opponent King Tower destroyed!' : 'Your King Tower has collapsed!'}</p>
+                    <button onClick={() => setSimOutcome(null)} className="bg-zinc-800 text-zinc-50 border border-zinc-700 font-medium text-sm px-4 py-2 rounded-lg cursor-pointer hover:bg-zinc-700 transition-all">Dismiss</button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
-            {/* Side Console & Presets */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div className="glass-panel" style={{ padding: '1rem' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>SELECT OPPONENT ARCHETYPE</span>
-                <select 
-                  value={selectedOpponentPreset} 
-                  onChange={(e) => setSelectedOpponentPreset(e.target.value)}
-                  style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem' }}
-                  disabled={simRunning}
-                >
+            {/* Console */}
+            <div className="flex flex-col gap-4">
+              <div className="bg-white/[.04] border border-zinc-800 rounded-lg p-4">
+                <span className="text-[0.8rem] text-zinc-400">SELECT OPPONENT ARCHETYPE</span>
+                <select value={selectedOpponentPreset} onChange={(e) => setSelectedOpponentPreset(e.target.value)} disabled={simRunning} className="w-full mt-1" style={{ padding: '.5rem', fontSize: '.85rem' }}>
                   <option value="pekka">Pekka Bridge Spam (Aggressive)</option>
                   <option value="golem">Golem Beatdown (Heavy Tank)</option>
                   <option value="hog">Hog 2.6 Cycle (Fast Cycle)</option>
                 </select>
               </div>
 
-              {/* Simulation Logs Console */}
-              <div className="battle-terminal">
-                {simLogs.slice(-6).map((log, idx) => {
-                  let lineClass = "";
-                  if (log.startsWith("[Victory]")) lineClass = "gold";
-                  else if (log.startsWith("[Defeat]")) lineClass = "red";
-                  else if (log.startsWith("[Tower]")) lineClass = "blue";
-                  
-                  return (
-                    <div key={idx} className={`battle-terminal-line ${lineClass}`}>
-                      {log}
-                    </div>
-                  );
-                })}
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-[0.72rem] text-zinc-400 min-h-[100px] max-h-[150px] overflow-y-auto">
+                {simLogs.slice(-6).map((log, idx) => (
+                  <div key={idx} className={log.startsWith('[Victory]') ? 'text-yellow-400' : log.startsWith('[Defeat]') ? 'text-red-400' : log.startsWith('[Tower]') ? 'text-blue-400' : ''}>{log}</div>
+                ))}
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button 
-                  onClick={startSimulation}
-                  className="btn" 
-                  disabled={simRunning}
-                  style={{ flex: 1, justifyContent: 'center' }}
-                >
+              <div className="flex gap-3">
+                <button onClick={startSimulation} disabled={simRunning} className="flex-1 justify-center bg-white text-zinc-950 font-medium text-sm py-2 rounded-lg cursor-pointer hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                   {simRunning ? 'Battle Simulating...' : '⚔️ Start Battle Simulation'}
                 </button>
                 {simRunning && (
-                  <button 
-                    onClick={() => { setSimRunning(false); setSimUnits([]); setSimOutcome(null); }}
-                    className="btn" 
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                  >
+                  <button onClick={() => { setSimRunning(false); setSimUnits([]); setSimOutcome(null); }} className="bg-zinc-800 text-zinc-50 border border-zinc-700 font-medium text-sm px-4 py-2 rounded-lg cursor-pointer hover:bg-zinc-700 transition-all">
                     End
                   </button>
                 )}
@@ -443,255 +220,125 @@ export default function Coach({ proMode, sharedDeck, cards }) {
         </div>
       )}
 
-      {/* REPLAY SELECTOR & STATS CARDS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
-        
-        {/* Selector Pane */}
-        <div className="cr-panel" style={{ minHeight: '250px' }}>
-          <div className="cr-panel-header">
-            <span className="cr-panel-title">Match Telemetry Log</span>
-            <span className="cr-league-badge cr-badge-challenger">REPLAYS</span>
+      {/* Replay selector + grade */}
+      <div className="grid gap-6 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))' }}>
+        <div className={`${panel} min-h-[250px]`}>
+          <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-4">
+            <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Match Telemetry Log</span>
+            <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border border-zinc-800 bg-white/[.03] text-zinc-400">REPLAYS</span>
           </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-            Select one of the pre-loaded match replay recordings below to analyze telemetry curves.
-          </p>
-
-          <select 
-            value={selectedPreset} 
-            onChange={(e) => setSelectedPreset(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem 1rem', marginBottom: '1.5rem' }}
-          >
-            {presets.map(p => (
-              <option key={p.key} value={p.key}>{p.name} ({p.outcome})</option>
-            ))}
+          <p className="text-[0.85rem] text-zinc-400 mb-5">Select one of the pre-loaded match replay recordings below to analyze telemetry curves.</p>
+          <select value={selectedPreset} onChange={(e) => setSelectedPreset(e.target.value)} className="w-full mb-6" style={{ padding: '.75rem 1rem' }}>
+            {presets.map(p => <option key={p.key} value={p.key}>{p.name} ({p.outcome})</option>)}
           </select>
-
           {results && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Elixir Spent (Player)</span>
-                <span style={{ fontWeight: 'bold', color: 'white' }}>{results.totalSpent} Elixir</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Elixir Leaked (Player)</span>
-                <span style={{ fontWeight: 'bold', color: results.totalLeaked > 3 ? 'var(--cr-red)' : '#4ade80' }}>
-                  {results.totalLeaked} Elixir
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Opponent Elixir Leaked</span>
-                <span style={{ fontWeight: 'bold', color: 'white' }}>{results.opponentLeaked} Elixir</span>
-              </div>
+            <div className="flex flex-col gap-3 text-[0.85rem]">
+              {[
+                ['Elixir Spent (Player)', `${results.totalSpent} Elixir`, 'text-white'],
+                ['Elixir Leaked (Player)', `${results.totalLeaked} Elixir`, results.totalLeaked > 3 ? 'text-red-400' : 'text-green-400'],
+                ['Opponent Elixir Leaked', `${results.opponentLeaked} Elixir`, 'text-white'],
+              ].map(([lbl, val, cls]) => (
+                <div key={lbl} className="flex justify-between px-2 py-2 bg-white/[.02] border border-zinc-800 rounded-lg">
+                  <span className="text-zinc-400">{lbl}</span>
+                  <span className={`font-bold ${cls}`}>{val}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Grade Card */}
         {results && (
-          <div className="cr-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', minHeight: '290px' }}>
-            <div className="cr-panel-header" style={{ width: '100%', margin: '-1.5rem -1.5rem 1rem -1.5rem' }}>
-              <span className="cr-panel-title">Resource Efficiency</span>
-              <span className="cr-league-badge cr-badge-master">GRADE</span>
+          <div className={`${panel} flex flex-col items-center justify-center text-center min-h-[290px]`}>
+            <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 px-5 py-3 mb-4 w-full" style={{ marginTop: '-1.25rem' }}>
+              <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Resource Efficiency</span>
+              <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-orange-400 bg-orange-500/5 border-orange-500/20">GRADE</span>
             </div>
-            
-            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <div 
-                style={{ 
-                  width: '90px', 
-                  height: '90px', 
-                  borderRadius: '50%', 
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '2px solid var(--cr-gold)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
-                <div 
-                  style={{ 
-                    fontSize: '3rem', 
-                    fontWeight: '700', 
-                    color: 'white',
-                    lineHeight: 1
-                  }}
-                >
-                  {results.grade}
-                </div>
-              </div>
+            <div className="w-[90px] h-[90px] rounded-full bg-white/[.02] border-2 flex items-center justify-center mb-2" style={{ borderColor: 'var(--cr-gold)' }}>
+              <span className="text-[3rem] font-bold text-white leading-none">{results.grade}</span>
             </div>
-
-            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white' }}>
-              {results.efficiency}% Efficiency
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', maxWidth: '240px', lineHeight: '1.3' }}>
-              Percentage of generated elixir successfully deployed onto the field.
-            </p>
+            <div className="text-[1.25rem] font-bold text-white">{results.efficiency}% Efficiency</div>
+            <p className="text-[0.8rem] text-zinc-400 mt-1 max-w-[240px] leading-snug">Percentage of generated elixir successfully deployed onto the field.</p>
           </div>
         )}
-
       </div>
 
-      {/* TELEMETRY CHART */}
+      {/* Telemetry chart */}
       {analyzing ? (
-        <div className="cr-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          <RefreshCw className="pulse-glow" style={{ animation: 'spin 2s linear infinite', margin: '0 auto 1rem auto' }} />
+        <div className={`${panel} py-16 text-center text-zinc-400`}>
+          <RefreshCw className="mx-auto mb-4 animate-spin" />
           <p>Processing replay telemetry log...</p>
         </div>
       ) : results ? (
-        <div className="cr-panel">
-          <div className="cr-panel-header">
-            <span className="cr-panel-title">Elixir Flow Telemetry Curve</span>
-            <span className="cr-league-badge cr-badge-ultimate">FLOW</span>
+        <div className={panel}>
+          <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-4">
+            <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Elixir Flow Telemetry Curve</span>
+            <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-sky-400 bg-sky-400/5 border-sky-400/20">FLOW</span>
           </div>
-
-          <div style={{ width: '100%', height: 350 }}>
-            <ResponsiveContainer>
+          <div style={{ width: '100%', height: '350px', minWidth: '0' }}>
+            <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={results.timeline} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorPlayer" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--cr-elixir)" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="var(--cr-elixir)" stopOpacity={0.0}/>
+                    <stop offset="5%" stopColor="var(--cr-elixir)" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="var(--cr-elixir)" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <XAxis 
-                  dataKey="time" 
-                  stroke="#9ca3af" 
-                  fontSize={11} 
-                  tickFormatter={formatTime} 
-                  tickLine={false} 
-                />
-                <YAxis 
-                  stroke="#9ca3af" 
-                  fontSize={11} 
-                  domain={[0, 10]} 
-                  tickCount={6} 
-                  label={{ value: 'Elixir Level', angle: -90, position: 'insideLeft', style: { fill: '#9ca3af', fontSize: 11 }, offset: 10 }}
-                />
-                <Tooltip 
-                  labelFormatter={(label) => `Time: ${formatTime(label)}`}
-                  contentStyle={{ backgroundColor: '#18181b', borderColor: 'var(--border)', borderRadius: 'var(--radius)' }}
-                  formatter={(value, name, props) => {
-                    const events = props.payload.events;
-                    if (name === "Player Elixir") {
-                      return [
-                        <div>
-                          <span style={{ fontWeight: 'bold', color: 'var(--cr-elixir)' }}>{value}</span>
-                          {events && events.length > 0 && (
-                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '4px', paddingTop: '4px', fontSize: '0.75rem', color: '#9ca3af' }}>
-                              {events.map((ev, i) => <div key={i}>{ev}</div>)}
-                            </div>
-                          )}
-                        </div>,
-                        name
-                      ];
-                    }
-                    return [value, name];
-                  }}
-                />
+                <XAxis dataKey="time" stroke="#9ca3af" fontSize={11} tickFormatter={formatTime} tickLine={false} />
+                <YAxis stroke="#9ca3af" fontSize={11} domain={[0, 10]} tickCount={6} label={{ value: 'Elixir Level', angle: -90, position: 'insideLeft', style: { fill: '#9ca3af', fontSize: 11 }, offset: 10 }} />
+                <Tooltip labelFormatter={(label) => `Time: ${formatTime(label)}`} contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px' }} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
-                <Area 
-                  type="monotone" 
-                  dataKey="playerElixir" 
-                  name="Player Elixir" 
-                  stroke="var(--cr-elixir)" 
-                  fillOpacity={1} 
-                  fill="url(#colorPlayer)" 
-                  strokeWidth={2.5} 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="opponentElixir" 
-                  name="Opponent Elixir" 
-                  stroke="#00b0ff" 
-                  fill="none" 
-                  strokeWidth={2} 
-                  strokeDasharray="4 4" 
-                />
+                <Area type="monotone" dataKey="playerElixir" name="Player Elixir" stroke="var(--cr-elixir)" fillOpacity={1} fill="url(#colorPlayer)" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="opponentElixir" name="Opponent Elixir" stroke="#00b0ff" fill="none" strokeWidth={2} strokeDasharray="4 4" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
       ) : null}
 
-      {/* MISTAKES IDENTIFIED & COACHING RECOMMENDATIONS */}
+      {/* Mistakes + drills */}
       {results && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
-          
-          {/* Mistakes Panel */}
-          <div className="cr-panel">
-            <div className="cr-panel-header" style={{ margin: '-1.5rem -1.5rem 1.25rem -1.5rem' }}>
-              <span className="cr-panel-title">Tactical Mistakes Detected</span>
-              <span className="cr-league-badge cr-badge-challenger" style={{ color: 'var(--cr-red)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }}>ERRORS</span>
+        <div className="grid gap-8" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))' }}>
+          <div className={panel}>
+            <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-5">
+              <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Tactical Mistakes Detected</span>
+              <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-red-400 bg-red-400/5 border-red-400/20">ERRORS</span>
             </div>
-
             {results.mistakes.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="flex flex-col gap-4">
                 {results.mistakes.map((m, idx) => (
-                  <div 
-                    key={idx} 
-                    style={{ 
-                      padding: '1rem', 
-                      background: 'rgba(239, 68, 68, 0.03)', 
-                      borderLeft: '3px solid var(--cr-red)', 
-                      borderRadius: 'var(--radius)' 
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                      <span className="badge" style={{ fontSize: '0.7rem', padding: '1px 5px', background: 'rgba(225, 39, 62, 0.15)', color: 'var(--cr-red)', fontWeight: 'bold' }}>{m.type}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>
-                        Time: {formatTime(m.time)}
-                      </span>
+                  <div key={idx} className="p-4 rounded-lg border-l-[3px] border-red-500" style={{ background: 'rgba(239,68,68,.03)' }}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[0.7rem] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-400">{m.type}</span>
+                      <span className="text-[0.75rem] text-zinc-400 font-bold">Time: {formatTime(m.time)}</span>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-main)', lineHeight: '1.4' }}>{m.desc}</p>
+                    <p className="text-[0.8rem] text-zinc-300 leading-snug">{m.desc}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(74, 222, 128, 0.05)', borderLeft: '4px solid #22c55e', padding: '1rem', borderRadius: '4px', color: '#a7f3d0' }}>
-                <CheckCircle size={18} style={{ color: '#4ade80', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.85rem' }}>No tactical mistakes detected! Exceptional gameplay pacing.</span>
+              <div className="flex items-center gap-2 bg-green-400/5 border-l-4 border-green-500 p-4 rounded text-emerald-200">
+                <CheckCircle size={18} className="text-green-400 flex-shrink-0" />
+                <span className="text-[0.85rem]">No tactical mistakes detected! Exceptional gameplay pacing.</span>
               </div>
             )}
           </div>
 
-          {/* Coach Tips Panel */}
-          <div className="cr-panel">
-            <div className="cr-panel-header" style={{ margin: '-1.5rem -1.5rem 1.25rem -1.5rem' }}>
-              <span className="cr-panel-title">Improvement Drills</span>
-              <span className="cr-league-badge cr-badge-master">DRILLS</span>
+          <div className={panel}>
+            <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-5">
+              <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Improvement Drills</span>
+              <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-orange-400 bg-orange-500/5 border-orange-500/20">DRILLS</span>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="flex flex-col gap-4">
               {results.tips.map((tip, idx) => (
-                <div key={idx} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                  <div 
-                    style={{ 
-                      background: 'var(--secondary)', 
-                      color: 'var(--foreground)', 
-                      border: '1px solid var(--border)',
-                      borderRadius: '50%', 
-                      width: '20px', 
-                      height: '20px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      fontSize: '0.75rem', 
-                      fontWeight: 'bold',
-                      flexShrink: 0,
-                      marginTop: '2px'
-                    }}
-                  >
-                    {idx + 1}
-                  </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>{tip}</p>
+                <div key={idx} className="flex gap-3 items-start">
+                  <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[0.75rem] font-bold text-white">{idx + 1}</div>
+                  <p className="text-[0.85rem] text-zinc-400 leading-snug">{tip}</p>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
       )}
-
     </div>
   );
 }
