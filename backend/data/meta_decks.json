@@ -1,0 +1,98 @@
+[
+  {
+    "id": "pekka-bridge-spam",
+    "name": "P.E.K.K.A Bridge Spam",
+    "cards": ["pekka", "bandit", "battle-ram", "electro-wizard", "royal-ghost", "dark-prince", "poison", "zap"],
+    "winRate": 52.4,
+    "popularity": 14.5,
+    "archetype": "Bridge Spam",
+    "averageElixir": 3.9,
+    "difficulty": "Hard",
+    "description": "Pressure opponents at the bridge with fast-moving threat cards. Use P.E.K.K.A for heavy tank defense, then counter-push with Battle Ram and Bandit.",
+    "matchups": {
+      "golem-beatdown": "Favorable",
+      "hog-cycle-2-6": "Even",
+      "log-bait-classic": "Unfavorable"
+    }
+  },
+  {
+    "id": "hog-cycle-2-6",
+    "name": "Hog 2.6 Cycle (Classic Var)",
+    "cards": ["hog-rider", "musketeer", "knight", "skeletons", "ice-spirit", "cannon", "fireball", "the-log"],
+    "winRate": 50.8,
+    "popularity": 18.2,
+    "archetype": "Cycle",
+    "averageElixir": 2.6,
+    "difficulty": "Hard",
+    "description": "A very fast cycle deck. Defend efficiently using cheap troops, pull enemies with Cannon and Knight, and cycle Hog Riders to chip away at towers.",
+    "matchups": {
+      "golem-beatdown": "Even",
+      "pekka-bridge-spam": "Even",
+      "lava-loon": "Favorable"
+    }
+  },
+  {
+    "id": "golem-beatdown",
+    "name": "Golem Beatdown",
+    "cards": ["golem", "baby-dragon", "night-witch", "lumberjack", "tornado", "poison", "skeletons", "bomber"],
+    "winRate": 51.5,
+    "popularity": 8.9,
+    "archetype": "Beatdown",
+    "averageElixir": 4.1,
+    "difficulty": "Easy",
+    "description": "Build massive, unstoppable pushes in double elixir. Sacrificial tower damage in early game, drop Golem in the back, and support with Night Witch and Lumberjack.",
+    "matchups": {
+      "hog-cycle-2-6": "Even",
+      "pekka-bridge-spam": "Unfavorable",
+      "log-bait-classic": "Favorable"
+    }
+  },
+  {
+    "id": "lava-loon",
+    "name": "LavaLoon Beatdown",
+    "cards": ["lava-hound", "balloon", "baby-dragon", "minions", "bats", "valkyrie", "tornado", "zap"],
+    "winRate": 53.1,
+    "popularity": 6.4,
+    "archetype": "Beatdown",
+    "averageElixir": 4.1,
+    "difficulty": "Medium",
+    "description": "An aerial beatdown deck. Tank for the Balloon using the Lava Hound. Use Tornado and spells to clear out air defense troops like Musketeer or Electro Wizard.",
+    "matchups": {
+      "pekka-bridge-spam": "Favorable",
+      "hog-cycle-2-6": "Unfavorable",
+      "golem-beatdown": "Even"
+    }
+  },
+  {
+    "id": "log-bait-classic",
+    "name": "Log Bait (Classic Var)",
+    "cards": ["goblin-barrel", "knight", "valkyrie", "inferno-tower", "the-log", "archers", "skeletons", "fireball"],
+    "winRate": 51.9,
+    "popularity": 12.1,
+    "archetype": "Spell Bait",
+    "averageElixir": 3.4,
+    "difficulty": "Medium",
+    "description": "Bait out the opponent's cheap spells (The Log/Zap) using defense or support cards, then throw your Goblin Barrel directly onto their tower for heavy damage.",
+    "matchups": {
+      "pekka-bridge-spam": "Favorable",
+      "golem-beatdown": "Unfavorable",
+      "lava-loon": "Even"
+    }
+  },
+  {
+    "id": "giant-sparky",
+    "name": "Giant Sparky Beatdown",
+    "cards": ["giant", "sparky", "electro-wizard", "wizard", "mini-pekka", "skeleton-army", "fireball", "zap"],
+    "winRate": 50.2,
+    "popularity": 5.5,
+    "archetype": "Beatdown",
+    "averageElixir": 4.5,
+    "difficulty": "Easy",
+    "description": "Support the Giant with Sparky's massive area blast. Use Electro Wizard and Wizard to cover Sparky from swarms and stuns.",
+    "matchups": {
+      "pekka-bridge-spam": "Favorable",
+      "log-bait-classic": "Even",
+      "golem-beatdown": "Unfavorable"
+    }
+  }
+]
