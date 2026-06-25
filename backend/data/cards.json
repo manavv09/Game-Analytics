@@ -1433,13 +1433,21 @@
     "elixir": 4,
     "type": "Troop",
     "rarity": "Champion",
-    "arena": 16,
-    "role": "support",
+    "arena": 11,
+    "role": "tank",
     "targets": "ground",
-    "winRate": 49,
-    "popularity": 4.4,
-    "synergies": [],
-    "counters": [],
+    "winRate": 52.6,
+    "popularity": 10.5,
+    "synergies": [
+      "graveyard",
+      "tombstone",
+      "poison"
+    ],
+    "counters": [
+      "valkyrie",
+      "baby-dragon",
+      "bowler"
+    ],
     "image": "https://royaleapi.github.io/cr-api-assets/cards/skeleton-king.png"
   },
   {
@@ -1478,13 +1486,21 @@
     "elixir": 5,
     "type": "Troop",
     "rarity": "Champion",
-    "arena": 17,
-    "role": "support",
+    "arena": 12,
+    "role": "air-defense",
     "targets": "air-ground",
-    "winRate": 51.1,
-    "popularity": 4.3,
-    "synergies": [],
-    "counters": [],
+    "winRate": 52.1,
+    "popularity": 11.2,
+    "synergies": [
+      "royal-hogs",
+      "earthquake",
+      "skeletons"
+    ],
+    "counters": [
+      "lightning",
+      "mega-knight",
+      "fireball"
+    ],
     "image": "https://royaleapi.github.io/cr-api-assets/cards/archer-queen.png"
   },
   {
@@ -1508,13 +1524,21 @@
     "elixir": 4,
     "type": "Troop",
     "rarity": "Champion",
-    "arena": 16,
+    "arena": 11,
     "role": "support",
     "targets": "ground",
-    "winRate": 50.7,
-    "popularity": 10.4,
-    "synergies": [],
-    "counters": [],
+    "winRate": 50.4,
+    "popularity": 7.3,
+    "synergies": [
+      "giant",
+      "tornado",
+      "fireball"
+    ],
+    "counters": [
+      "mini-pekka",
+      "pekka",
+      "inferno-tower"
+    ],
     "image": "https://royaleapi.github.io/cr-api-assets/cards/golden-knight.png"
   },
   {
@@ -1538,13 +1562,21 @@
     "elixir": 5,
     "type": "Troop",
     "rarity": "Champion",
-    "arena": 18,
-    "role": "support",
+    "arena": 12,
+    "role": "tank",
     "targets": "ground",
-    "winRate": 51.5,
-    "popularity": 8.9,
-    "synergies": [],
-    "counters": [],
+    "winRate": 51.8,
+    "popularity": 8.1,
+    "synergies": [
+      "goblin-giant",
+      "sparky",
+      "phoenix"
+    ],
+    "counters": [
+      "inferno-tower",
+      "minions",
+      "bats"
+    ],
     "image": "https://royaleapi.github.io/cr-api-assets/cards/monk.png"
   },
   {
@@ -2492,98 +2524,6 @@
       "valkyrie"
     ],
     "image": "https://royaleapi.github.io/cr-api-assets/cards/little-prince.png"
-  },
-  {
-    "key": "monk",
-    "name": "Monk",
-    "elixir": 5,
-    "type": "Troop",
-    "rarity": "Champion",
-    "arena": 12,
-    "role": "tank",
-    "targets": "ground",
-    "winRate": 51.8,
-    "popularity": 8.1,
-    "synergies": [
-      "goblin-giant",
-      "sparky",
-      "phoenix"
-    ],
-    "counters": [
-      "inferno-tower",
-      "minions",
-      "bats"
-    ],
-    "image": "https://royaleapi.github.io/cr-api-assets/cards/monk.png"
-  },
-  {
-    "key": "archer-queen",
-    "name": "Archer Queen",
-    "elixir": 5,
-    "type": "Troop",
-    "rarity": "Champion",
-    "arena": 12,
-    "role": "air-defense",
-    "targets": "air-ground",
-    "winRate": 52.1,
-    "popularity": 11.2,
-    "synergies": [
-      "royal-hogs",
-      "earthquake",
-      "skeletons"
-    ],
-    "counters": [
-      "lightning",
-      "mega-knight",
-      "fireball"
-    ],
-    "image": "https://royaleapi.github.io/cr-api-assets/cards/archer-queen.png"
-  },
-  {
-    "key": "golden-knight",
-    "name": "Golden Knight",
-    "elixir": 4,
-    "type": "Troop",
-    "rarity": "Champion",
-    "arena": 11,
-    "role": "support",
-    "targets": "ground",
-    "winRate": 50.4,
-    "popularity": 7.3,
-    "synergies": [
-      "giant",
-      "tornado",
-      "fireball"
-    ],
-    "counters": [
-      "mini-pekka",
-      "pekka",
-      "inferno-tower"
-    ],
-    "image": "https://royaleapi.github.io/cr-api-assets/cards/golden-knight.png"
-  },
-  {
-    "key": "skeleton-king",
-    "name": "Skeleton King",
-    "elixir": 4,
-    "type": "Troop",
-    "rarity": "Champion",
-    "arena": 11,
-    "role": "tank",
-    "targets": "ground",
-    "winRate": 52.6,
-    "popularity": 10.5,
-    "synergies": [
-      "graveyard",
-      "tombstone",
-      "poison"
-    ],
-    "counters": [
-      "valkyrie",
-      "baby-dragon",
-      "bowler"
-    ],
-    "image": "https://royaleapi.github.io/cr-api-assets/cards/skeleton-king.png"
   },
   {
     "key": "void",
