@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Play, ShieldAlert, Info } from 'lucide-react';
+import {
+  panel, pageTitle, pageDesc, pageHeader, panelHeader, panelTitle,
+  badge, btnPrimary, btnSecondary, cardBase, cardGradient, label as crLabel
+} from '../utils/ui.js';
 
 const API_BASE = 'http://localhost:5000/api';
-const panel = "bg-white/[.04] backdrop-blur-md border border-zinc-800 rounded-lg p-5 relative overflow-hidden transition-all hover:border-zinc-600";
+
+const cardRarityClass = (card) => {
+  if (card?.rarity === 'legendary') return 'anim-legendary';
+  if (card?.rarity === 'champion') return 'anim-champion';
+  if (card?.isEvo) return 'anim-evo';
+  return '';
+};
 
 export default function Recommender({ onImportDeck, onViewCardDetails, useCollectionMode, unlockedCards }) {
   const [cards, setCards] = useState([]);
@@ -45,7 +55,7 @@ export default function Recommender({ onImportDeck, onViewCardDetails, useCollec
 
     const recommendationResults = [];
     metaMatches.forEach(m => {
-      recommendationResults.push({ type: 'Meta Match', name: m.name, cards: m.cards, winRate: m.winRate, popularity: m.popularity, averageElixir: m.averageElixir, archetype: m.archetype, difficulty: m.difficulty, reason: `Matches your locked card(s) and is an active meta deck with a ${m.winRate}% win rate.` });
+      recommendationResults.push({ type: 'Meta Match', name: m.name, cards: m.cards, winRate: m.winRate, popularity: m.popularity, averageElixir: m.averageElixir, archetype: m.archetype, difficulty: m.difficulty, reason: `Matches your locked card(s) with a ${m.winRate}% meta win rate.` });
     });
 
     if (recommendationResults.length < 3) {
@@ -108,7 +118,7 @@ export default function Recommender({ onImportDeck, onViewCardDetails, useCollec
           cards: customDeck, winRate: customWinRate, popularity: 1.5, averageElixir: customAvg,
           archetype: customAvg > 3.8 ? 'Control-Beatdown' : customAvg < 3.0 ? 'Cycle' : 'Balanced',
           difficulty: 'Medium',
-          reason: 'Algorithmic custom build compiled to maximize direct synergies, maintain Elixir curve limits, and complete defensive requirements.'
+          reason: 'Custom build optimized for synergy, elixir curve, and defensive coverage.'
         });
       }
     }
@@ -117,100 +127,93 @@ export default function Recommender({ onImportDeck, onViewCardDetails, useCollec
 
   useEffect(() => { if (!loading) handleRecommend(); }, [selectedFavs, arena, loading, useCollectionMode, unlockedCards]);
 
-  if (loading) return <p className="text-zinc-400 text-center py-16">Synchronizing deck models...</p>;
+  if (loading) {
+    return (
+      <div className="cr-loading">
+        <div className="cr-spinner" />
+        Loading deck data…
+      </div>
+    );
+  }
 
   const availableArenaCards = cards.filter(c => c.arena <= parseInt(arena) && (useCollectionMode ? unlockedCards.includes(c.key) : true));
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex justify-between items-center flex-wrap gap-4">
+      <div className={pageHeader}>
         <div>
-          <h1 className="text-[1.75rem] font-extrabold tracking-tight text-white mb-1"
-              style={{ fontFamily: 'var(--font-clash)', textShadow: '-1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 2px 3px 6px rgba(0,0,0,.85)' }}>
-            Clan Cards (Deck Finder)
-          </h1>
-          <p className="text-zinc-400 text-sm">Select up to 3 core cards you want to play, lock your current Arena unlock limit, and our engine will search meta profiles or algorithmically build a synergistic deck.</p>
+          <h1 className={pageTitle}>Deck Finder</h1>
+          <p className={pageDesc}>Pick up to 3 core cards and your arena level — we'll find meta matches or build a synergistic deck.</p>
         </div>
-        {useCollectionMode && <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-orange-400 bg-orange-500/5 border-orange-500/20">COLLECTION LOCKED MODE</span>}
+        {useCollectionMode && <span className={`${badge} cr-badge-orange`}>Collection mode</span>}
       </div>
 
       <div className="grid gap-8 items-start" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px,1fr))' }}>
 
-        {/* Left column */}
         <div className="flex flex-col gap-8">
-          {/* Constraints panel */}
           <div className={panel}>
-            <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-4">
-              <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Deck Constraints</span>
-              <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border border-zinc-800 bg-white/[.03] text-zinc-400">FILTERS</span>
+            <div className={panelHeader}>
+              <span className={panelTitle}>Constraints</span>
+              <span className={badge}>Filters</span>
             </div>
 
-            {/* Arena selector */}
             <div className="mb-6">
-              <label className="text-[0.85rem] text-zinc-400 block mb-2">CURRENT ARENA LEVEL</label>
-              <select value={arena} onChange={(e) => setArena(e.target.value)} className="w-full" style={{ padding: '.75rem 1rem' }}>
-                {[['0','Training Camp'],['1','Goblin Stadium'],['2','Bone Pit'],['3','Barbarian Bowl'],['4','P.E.K.K.A Playhouse'],['5','Spell Valley'],['6','Builder Workshop'],['7','Royal Arena'],['8','Frozen Peak'],['9','Jungle Arena'],['10','Hog Mountain'],['11','Electro Valley'],['12','Spooky Town & Legendary']].map(([val, label]) => (
-                  <option key={val} value={val}>Arena {val} ({label})</option>
+              <label className={`${crLabel} block mb-2`}>Arena level</label>
+              <select value={arena} onChange={(e) => setArena(e.target.value)} className="w-full">
+                {[['0','Training Camp'],['1','Goblin Stadium'],['2','Bone Pit'],['3','Barbarian Bowl'],['4','P.E.K.K.A Playhouse'],['5','Spell Valley'],['6','Builder Workshop'],['7','Royal Arena'],['8','Frozen Peak'],['9','Jungle Arena'],['10','Hog Mountain'],['11','Electro Valley'],['12','Spooky Town & Legendary']].map(([val, arenaLabel]) => (
+                  <option key={val} value={val}>Arena {val} ({arenaLabel})</option>
                 ))}
               </select>
             </div>
 
-            {/* Locked cards */}
             <div>
-              <label className="text-[0.85rem] text-zinc-400 block mb-2">LOCKED CORE CARDS (MAX 3)</label>
+              <label className={`${crLabel} block mb-2`}>Core cards (max 3)</label>
               {selectedFavs.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {selectedFavs.map(favKey => {
                     const card = cards.find(c => c.key === favKey);
                     return (
                       <div key={favKey} onClick={() => toggleFavCard(favKey)}
-                           className={`relative flex flex-col items-center justify-between p-1 rounded-xl overflow-hidden cr-card-sheen cursor-pointer border ${
-                             card?.rarity === 'legendary' ? 'anim-legendary' : card?.rarity === 'champion' ? 'anim-champion' : card?.isEvo ? 'anim-evo' : 'border-zinc-700'
-                           }`}
-                           style={{ aspectRatio: '5/7', background: 'linear-gradient(135deg,rgba(30,30,38,.95),rgba(15,15,20,.98))', borderColor: 'var(--cr-gold)' }}>
-                        <span className="absolute top-1 left-1 bg-pink-500 text-white px-[5px] py-[2px] rounded text-[0.65rem] font-semibold z-10">{card?.elixir}</span>
+                           className={`${cardBase} ${cardGradient} ${cardRarityClass(card)} cr-card-selected`}
+                           style={{ aspectRatio: '5/7' }}>
+                        <span className="cr-card-elixir">{card?.elixir}</span>
                         <button onClick={(e) => { e.stopPropagation(); onViewCardDetails(favKey); }}
-                                className="absolute top-0.5 right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-white/10 border-0 text-white rounded cursor-pointer z-[15]">
+                                className="cr-card-action info">
                           <Info size={8} />
                         </button>
                         <img src={card?.image} alt={card?.name} className="w-[75%] object-contain mt-3" />
-                        <span className="text-[0.65rem] text-zinc-400 text-center w-full py-0.5 truncate">{card?.name}</span>
+                        <span className="cr-card-name">{card?.name}</span>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="p-4 border border-dashed border-zinc-700 rounded-lg text-zinc-400 text-center text-[0.85rem] mb-4">
-                  No cards locked. Click cards below to set favorites.
+                <div className="cr-card-slot-empty p-4 mb-4 text-center">
+                  No cards locked. Tap cards below to set favorites.
                 </div>
               )}
             </div>
           </div>
 
-          {/* Card pool */}
           <div className={panel}>
-            <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-4">
-              <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Tap to Lock Card</span>
-              <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-orange-400 bg-orange-500/5 border-orange-500/20">POOL</span>
+            <div className={panelHeader}>
+              <span className={panelTitle}>Card pool</span>
+              <span className={`${badge} cr-badge-orange`}>Tap to lock</span>
             </div>
             <div className="grid overflow-y-auto pr-1" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(90px,1fr))', gap: '.75rem', maxHeight: '320px' }}>
               {availableArenaCards.map(card => {
                 const isSelected = selectedFavs.includes(card.key);
                 return (
                   <div key={card.key} onClick={() => toggleFavCard(card.key)}
-                       className={`relative flex flex-col items-center justify-between p-1 rounded-xl overflow-hidden cr-card-sheen cursor-pointer border transition-all hover:-translate-y-2 hover:scale-105 ${
-                         card.rarity === 'legendary' ? 'anim-legendary' : card.rarity === 'champion' ? 'anim-champion' : card.isEvo ? 'anim-evo' : 'border-zinc-700'
-                       } ${!isSelected && selectedFavs.length >= 3 ? 'opacity-40 pointer-events-none' : ''}`}
-                       style={{ aspectRatio: '5/7', background: 'linear-gradient(135deg,rgba(30,30,38,.95),rgba(15,15,20,.98))',
-                                borderColor: isSelected ? 'var(--cr-gold)' : '', boxShadow: isSelected ? '0 0 0 1px var(--cr-gold)' : '' }}>
-                    <span className="absolute top-1 left-1 bg-pink-500 text-white px-[5px] py-[2px] rounded text-[0.65rem] font-semibold z-10">{card.elixir}</span>
+                       className={`${cardBase} ${cardGradient} ${cardRarityClass(card)} ${isSelected ? 'cr-card-selected' : ''} ${!isSelected && selectedFavs.length >= 3 ? 'opacity-40 pointer-events-none' : ''}`}
+                       style={{ aspectRatio: '5/7' }}>
+                    <span className="cr-card-elixir">{card.elixir}</span>
                     <button onClick={(e) => { e.stopPropagation(); onViewCardDetails(card.key); }}
-                            className="absolute top-0.5 right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-white/10 border-0 text-white rounded cursor-pointer z-[15]">
+                            className="cr-card-action info">
                       <Info size={8} />
                     </button>
                     <img src={card.image} alt={card.name} className="w-[75%] object-contain mt-3" />
-                    <span className="text-[0.65rem] text-zinc-400 text-center w-full py-0.5 truncate">{card.name}</span>
+                    <span className="cr-card-name">{card.name}</span>
                   </div>
                 );
               })}
@@ -218,62 +221,59 @@ export default function Recommender({ onImportDeck, onViewCardDetails, useCollec
           </div>
         </div>
 
-        {/* Right: results */}
         <div className={panel}>
-          <div className="flex justify-between items-center border-b border-zinc-800 -mx-5 -mt-5 px-5 py-3 mb-4">
-            <span className="font-extrabold text-base text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '-1px -1px 0 #000, 1px 1px 0 #000' }}>Algorithmic Recommendations</span>
-            <span className="text-[0.75rem] font-medium px-3 py-1 rounded-full border text-sky-400 bg-sky-400/5 border-sky-400/20">DECKS</span>
+          <div className={panelHeader}>
+            <span className={panelTitle}>Recommendations</span>
+            <span className={`${badge} cr-badge-blue`}>Decks</span>
           </div>
 
           {results.length > 0 ? (
             <div className="flex flex-col gap-6">
               {results.map((deck, idx) => (
-                <div key={idx} className="bg-white/[.04] backdrop-blur-md border border-zinc-800 rounded-lg p-5 transition-all hover:border-zinc-600"
-                     style={{ borderLeft: `3px solid ${deck.type === 'Meta Match' ? '#4ade80' : 'var(--cr-blue)'}` }}>
+                <div key={idx} className={panel}
+                     style={{ borderLeft: `3px solid ${deck.type === 'Meta Match' ? 'var(--cr-green)' : 'var(--cr-blue)'}` }}>
                   <div className="flex justify-between items-start flex-wrap gap-3 mb-3">
                     <div>
-                      <span className={`text-[0.65rem] font-medium px-1.5 py-0.5 rounded mr-2 ${deck.type === 'Meta Match' ? 'text-green-400 bg-green-400/15' : 'text-blue-400 bg-blue-400/15'}`}>{deck.type}</span>
-                      <h3 className="inline text-[1.15rem] font-bold text-white" style={{ fontFamily: 'var(--font-clash)', textShadow: '1px 1px 0 #000' }}>{deck.name}</h3>
-                      <p className="text-[0.8rem] text-zinc-400 mt-1 leading-snug">{deck.reason}</p>
+                      <span className={`${badge} ${deck.type === 'Meta Match' ? 'cr-badge-green' : 'cr-badge-blue'} mr-2`}>{deck.type}</span>
+                      <h3 className="inline text-base font-bold text-[var(--cr-text)]">{deck.name}</h3>
+                      <p className="text-sm cr-text-muted mt-1 leading-snug">{deck.reason}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-[0.75rem] text-zinc-400">EST. WIN-RATE</div>
-                      <div className="text-[1.25rem] font-extrabold text-green-400" style={{ fontFamily: 'var(--font-clash)', textShadow: '1px 1px 0 #000' }}>{deck.winRate}%</div>
+                      <div className="cr-stat-label">Win rate</div>
+                      <div className="cr-stat-value cr-text-green">{deck.winRate}%</div>
                     </div>
                   </div>
 
-                  {/* Deck cards */}
                   <div className="flex gap-2 overflow-x-auto py-2 mb-4">
                     {deck.cards.map(cKey => {
                       const c = cards.find(card => card.key === cKey);
                       return (
                         <div key={cKey} onClick={() => onViewCardDetails(cKey)}
-                             title={c ? `${c.name} (${c.elixir} Elixir) - Click for Info` : cKey}
-                             className="w-[46px] h-[64px] rounded-md overflow-hidden border border-zinc-800 bg-zinc-950 flex-shrink-0 cursor-pointer hover:border-zinc-500 transition-all">
+                             title={c ? `${c.name} (${c.elixir} elixir)` : cKey}
+                             className="w-[46px] h-[64px] rounded-md overflow-hidden border border-[var(--cr-border)] bg-[var(--cr-bg)] flex-shrink-0 cursor-pointer hover:border-[var(--cr-border-hover)] transition-all">
                           <img src={c?.image} alt={c?.name} className="w-full h-full object-contain" />
                         </div>
                       );
                     })}
                   </div>
 
-                  <div className="flex justify-between items-center flex-wrap gap-3 text-[0.85rem]">
+                  <div className="flex justify-between items-center flex-wrap gap-3 text-sm">
                     <div className="flex gap-4">
-                      <span className="font-bold" style={{ color: 'var(--cr-elixir)' }}>Elixir: {deck.averageElixir}</span>
-                      <span className="font-bold" style={{ color: 'var(--cr-gold)' }}>Archetype: {deck.archetype}</span>
+                      <span className="font-semibold cr-text-pink">Elixir: {deck.averageElixir}</span>
+                      <span className="font-semibold cr-text-gold">Archetype: {deck.archetype}</span>
                     </div>
-                    <button onClick={() => onImportDeck(deck.cards)}
-                            className="flex items-center gap-1.5 bg-white text-zinc-950 font-medium text-sm px-4 py-2 rounded-lg cursor-pointer hover:bg-white/90 transition-all">
-                      <Play size={12} fill="currentColor" /> Load Deck
+                    <button onClick={() => onImportDeck(deck.cards)} className={btnPrimary}>
+                      <Play size={12} fill="currentColor" /> Load deck
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-zinc-400">
+            <div className="text-center py-12 cr-text-muted">
               <ShieldAlert size={32} className="mx-auto mb-4 opacity-50" />
-              <p>No recommendations could be compiled for your active filters.</p>
-              {useCollectionMode && <p className="text-[0.75rem] text-red-400 mt-2">Try opening more Chests in the Chest Shop to expand your card collection options.</p>}
+              <p>No recommendations for your current filters.</p>
+              {useCollectionMode && <p className="text-xs cr-text-red mt-2">Try unlocking more cards in the Chest Shop.</p>}
             </div>
           )}
         </div>
