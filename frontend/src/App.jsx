@@ -24,17 +24,13 @@ const NAV_ITEMS = [
 ];
 
 const ShieldLogo = ({ size = 28 }) => (
-  <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="url(#goldGrad)" stroke="#c9a227" strokeWidth="1.25" />
-    <path d="M8 14l1.5-4L12 12l2.5-2L16 14H8z" fill="#fff" stroke="#1e293b" strokeWidth="0.75" />
-    <circle cx="12" cy="9" r="0.75" fill="#fff" />
-    <defs>
-      <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#f5c842" />
-        <stop offset="100%" stopColor="#c9a227" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <img 
+    src="/favicon.png" 
+    alt="Royale Insights Logo" 
+    width={size} 
+    height={size} 
+    style={{ objectFit: 'contain', borderRadius: '4px' }}
+  />
 );
 
 export default function App() {
